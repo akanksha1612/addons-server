@@ -1,11 +1,12 @@
+import tempfile
 import os
+import subprocess
 from base64 import b64encode
 
+from django.conf import settings
 from django.core.files.storage import default_storage as storage
 from django.template import loader
 
-from wand.exceptions import WandException
-from wand.image import Image as WandImage
 
 import olympia.core.logger
 from olympia import amo
@@ -16,25 +17,28 @@ from olympia.amo.decorators import write
 log = olympia.core.logger.getLogger('z.files.utils')
 
 
-def write_svg_to_png(svg_content, out):
-    temp_svg_path = out + '.svg'
-    size = None
-    try:
-        with storage.open(temp_svg_path, 'wb') as svgout:
-            svgout.write(svg_content)
-        with storage.open(temp_svg_path, 'rb') as svgout:
-            with WandImage(file=svgout, format='svg') as img:
-                img.format = 'png'
-                with storage.open(out, 'wb') as out:
-                    img.save(file=out)
-                    size = img.size
-    except IOError as ioerror:
-        log.debug(ioerror)
-    except WandException as wand_exception:
-        log.debug(wand_exception)
-    finally:
-        if os.path.exists(temp_svg_path):
-            os.unlink(temp_svg_path)
+def write_svg_to_png(svg_content, target):
+    tmp_args = {'dir': settings.TMP_PATH, 'mode': 'wb', 'suffix': '.svg'}
+    with tempfile.NamedTemporaryFile(**tmp_args) as temporary_svg:
+        temporary_svg.write(svg_content)
+        temporary_svg.flush()
+
+        size = None
+        try:
+
+
+            command = [
+                settings.RSVG_CONVERT_BIN,
+                '-o', target,
+                temporary_svg.name
+            ]
+            print('XXXXXXX', command)
+            subprocess.call(command)
+
+            # TODO: update size
+            size = None
+        except IOError as ioerror:
+            log.debug(ioerror)
     return size
 
 

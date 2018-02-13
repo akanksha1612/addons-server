@@ -30,6 +30,7 @@ def test_write_svg_to_png():
         svg = svgfile.read()
     write_svg_to_png(svg, out)
     assert storage.exists(out)
+    shutil.copyfile(out, os.path.join(settings.ROOT, 'out.png'))
     # compare the image content. rms should be 0 but travis renders it
     # different... 960 is the magic difference.
     svg_png_img = Image.open(svg_png)
@@ -39,7 +40,6 @@ def test_write_svg_to_png():
         reduce(operator.add, map(
             lambda h, i: h * (i ** 2), image_diff.histogram(), range(1024))
         ) / (float(svg_png_img.size[0]) * svg_png_img.size[1]))
-    shutil.copyfile(out, os.path.join(settings.ROOT, 'out.png'))
     assert rms < 960
 
 

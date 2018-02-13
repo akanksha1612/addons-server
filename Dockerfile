@@ -8,12 +8,8 @@ ADD docker/nodesource.gpg.key /etc/pki/gpg/GPG-KEY-nodesource
 RUN apt-get update && apt-get install -y \
         gnupg2 \
     && rm -rf /var/lib/apt/lists/*
-# ADD docker/nodesource.repo /etc/yum.repos.d/nodesource.repo
 RUN cat /etc/pki/gpg/GPG-KEY-nodesource | apt-key add -
 ADD docker/debian-stretch-nodesource-repo /etc/apt/sources.list.d/nodesource.list
-
-# For git dependencies
-# ADD docker/git.repo /etc/yum.repos.d/git.repo
 
 # Upgrade git
 RUN apt-get update && apt-get install -y \
@@ -33,8 +29,8 @@ RUN apt-get update && apt-get install -y \
         python-pip \
         nodejs \
         npm \
-        # ImageMagick is used to make our static theme previews
-        ImageMagick-devel \
+        # Use rsvg-convert to render our static theme previewy
+        librsvg2-bin \
         # Git, because we're using git-checkout dependencies
         git \
         # Dependencies for mysql-python
